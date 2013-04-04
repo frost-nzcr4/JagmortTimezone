@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @author frost-nzcr4 <frost-nzcr4@jagmort.com>
+ * @version 0.2
+ */
 abstract class JagmortTzDoctrineRecord extends sfDoctrineRecord {
   /**
    * Get the Doctrine date value as a PHP DateTime object.
@@ -22,7 +26,11 @@ abstract class JagmortTzDoctrineRecord extends sfDoctrineRecord {
     }
     else
     {
-      return $datetime->setTimezone(new DateTimeZone(sfContext::getInstance()->getUser()->getGuardUser()->getTimezone()->getName()));
+      try {
+        return $datetime->setTimezone(new DateTimeZone(sfContext::getInstance()->getUser()->getGuardUser()->getTimezone()->getName()));
+      } catch (Exception $e) {
+        return $datetime;
+      }
     }
   }
 }

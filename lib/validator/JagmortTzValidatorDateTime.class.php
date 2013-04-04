@@ -1,6 +1,6 @@
 <?php
 
-class JagmortTzValidatorDateTime extends sfValidatorDateTime
+class JagmortTzValidatorDateTime extends sfValidatorDate
 {
   /**
    * Constructor.
@@ -17,8 +17,18 @@ class JagmortTzValidatorDateTime extends sfValidatorDateTime
   public function __construct($options = array(), $messages = array())
   {
     $this->addOption('timezone', sfContext::getInstance()->getUser()->getGuardUser()->getTimezone()->getName());
-  
+
     parent::__construct($options, $messages);
+  }
+
+  /**
+   * @see sfValidatorDate
+   */
+  protected function configure($options = array(), $messages = array())
+  {
+    parent::configure($options, $messages);
+
+    $this->setOption('with_time', true);
   }
 
   protected function doClean($value)
@@ -30,16 +40,16 @@ class JagmortTzValidatorDateTime extends sfValidatorDateTime
       {
         throw new sfValidatorError($this, 'bad_format', array('value' => $value, 'date_format' => $this->getOption('date_format_error') ? $this->getOption('date_format_error') : $this->getOption('date_format')));
       }
-  
+
       $value = $match;
     }
-  
+
     // convert array to date string
     if (is_array($value))
     {
       $value = $this->convertDateArrayToString($value);
     }
-  
+
     // convert timestamp to date number format
     if (is_numeric($value))
     {

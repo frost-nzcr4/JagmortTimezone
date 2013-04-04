@@ -42,23 +42,23 @@ $sf_user = $context->user;
 $database = new sfPDODatabase(array('dsn' => 'sqlite::memory:'));
 $connection = $database->getConnection();
 $connection->exec('SET TIMEZONE UTC');
-$connection->exec('CREATE TABLE event_occurrence (id INTEGER PRIMARY KEY, start_date DATETIME)');
+$connection->exec('CREATE TABLE event_occurrence (id INTEGER PRIMARY KEY, datetime DATETIME, date DATE, time TIME, timestamp TIMESTAMP)');
 Doctrine_Manager::connection($connection);
 
 // initialize object
 $now = date('Y-m-d H:i:s');
 $EventOccurrence = new EventOccurrence();
-$EventOccurrence->setStartDate($now);
+$EventOccurrence->setDatetime($now);
 
 /**
  * test
  */
-$t->diag('->getStartDate()');
-$t->is($EventOccurrence->getStartDate(), $now, '->getStartDate() model timezone equal to system default timezone');
+$t->diag('->getDatetime()');
+$t->is($EventOccurrence->getDatetime(), $now, '->getDatetime() model timezone equal to system default timezone');
 
 $EventOccurrence->save();
 $EventOccurrence = EventOccurrenceTable::getInstance()->get($EventOccurrence->getPrimaryKey());
-$t->is($EventOccurrence->getStartDate(), $now, '->getStartDate() model timezone equal to system default timezone after save');
+$t->is($EventOccurrence->getDatetime(), $now, '->getDatetime() model timezone equal to system default timezone after save');
 
 /**
  * test
@@ -77,17 +77,17 @@ $t->is(date_default_timezone_get(), sfConfig::get('sf_default_timezone'), '->set
  * test
  */
 $eo1 = new EventOccurrence();
-$eo1->setStartDate('2012-01-01 00:10:11');
+$eo1->setDatetime('2012-01-01 00:10:11');
 $eo_list = array(
   $EventOccurrence,
   $eo1);
 foreach ($eo_list as $EO) {
-  //echo $EventOccurrenceForm->getWidget('start_date')->render('event_occurrence[start_date]');
+  //echo $EventOccurrenceForm->getWidget('datetime')->render('event_occurrence[datetime]');
   //echo $EventOccurrenceForm->render();
 
   $EOForm = new EventOccurrenceForm($EO, array(), false);
 
-  $model_dt = $EO->getDateTimeObject('start_date');
+  $model_dt = $EO->getDateTimeObject('datetime');
   $view_dt = clone $model_dt;
   $view_dt->setTimezone(new DateTimeZone($sf_user->getGuardUser()->getTimezone()->getName()));
 
@@ -101,25 +101,25 @@ foreach ($eo_list as $EO) {
 
   //$t->isnt($model_dt->getTimezone()->getName(), $view_dt->getTimezone()->getName(), 'model and view timezone should differs');
 
-  $t->is($css->matchSingle('#event_occurrence_start_date_month option[selected=selected]')->getValue(), $view_dt->format('m'), '->render() should set month from model to view timezone');
-  $t->is($css->matchSingle('#event_occurrence_start_date_day option[selected=selected]')->getValue(), $view_dt->format('d'), '->render() should set day from model to view timezone');
-  $t->is($css->matchSingle('#event_occurrence_start_date_year option[selected=selected]')->getValue(), $view_dt->format('Y'), '->render() should set year from model to view timezone');
+  $t->is($css->matchSingle('#event_occurrence_datetime_month option[selected=selected]')->getValue(), $view_dt->format('m'), '->render() should set month from model to view timezone');
+  $t->is($css->matchSingle('#event_occurrence_datetime_day option[selected=selected]')->getValue(), $view_dt->format('d'), '->render() should set day from model to view timezone');
+  $t->is($css->matchSingle('#event_occurrence_datetime_year option[selected=selected]')->getValue(), $view_dt->format('Y'), '->render() should set year from model to view timezone');
   // There is an known bug when DST is used
   // @see https://bugs.php.net/bug.php?id=51051
   if ($model_dt->format('I') !== $view_dt->format('I')) {
-    $t->is($css->matchSingle('#event_occurrence_start_date_hour option[selected=selected]')->getValue(), $view_dt->format('H'), '->render() should set hour from model to view timezone (Known PHP bug, always fail with +1 or -1 hour caused by wrong DST conversion)');
+    $t->is($css->matchSingle('#event_occurrence_datetime_hour option[selected=selected]')->getValue(), $view_dt->format('H'), '->render() should set hour from model to view timezone (Known PHP bug, always fail with +1 or -1 hour caused by wrong DST conversion)');
   } else {
-    $t->is($css->matchSingle('#event_occurrence_start_date_hour option[selected=selected]')->getValue(), $view_dt->format('H'), '->render() should set hour from model to view timezone');
+    $t->is($css->matchSingle('#event_occurrence_datetime_hour option[selected=selected]')->getValue(), $view_dt->format('H'), '->render() should set hour from model to view timezone');
   }
-  $t->is($css->matchSingle('#event_occurrence_start_date_minute option[selected=selected]')->getValue(), $view_dt->format('i'), '->render() should set minute from model to view timezone');
-  $t->is($css->matchSingle('#event_occurrence_start_date_second option[selected=selected]')->getValue(), $view_dt->format('s'), '->render() should set second from model to view timezone');
+  $t->is($css->matchSingle('#event_occurrence_datetime_minute option[selected=selected]')->getValue(), $view_dt->format('i'), '->render() should set minute from model to view timezone');
+  $t->is($css->matchSingle('#event_occurrence_datetime_second option[selected=selected]')->getValue(), $view_dt->format('s'), '->render() should set second from model to view timezone');
 }
 
 /**
  * test
  */
 $eo1 = new EventOccurrence();
-$eo1->setStartDate('2012-01-01 00:10:11');
+$eo1->setDatetime('2012-01-01 00:10:11');
 $eo_list = array(
   $EventOccurrence,
   $eo1);
@@ -133,13 +133,17 @@ foreach ($eo_list as $EO) {
 
   $EOForm->bind(array(
     'id' => $EO->getId(),
-    'start_date' => array(
+    'datetime' => array(
       'year'   => $view_dt->format('Y'),
       'month'  => $view_dt->format('n'),
       'day'    => $view_dt->format('j'),
       'hour'   => $view_dt->format('G'),
       'minute' => (int)$view_dt->format('i'),   // (int) remove leading zero
-      'second' => (int)$view_dt->format('s'))  // (int) remove leading zero
+      'second' => (int)$view_dt->format('s')),  // (int) remove leading zero
+    /*'date' => array(
+      'year'   => $view_dt->format('Y'),
+      'month'  => $view_dt->format('n'),
+      'day'    => $view_dt->format('j'))*/
   ));
 /*
   $e = $EOForm->getErrorSchema();
@@ -150,7 +154,7 @@ foreach ($eo_list as $EO) {
   }
 */
   $values = $EOForm->getValues();
-  $t->is($values['start_date'], $model_dt->format('Y-m-d H:i:s'), '->bind() should set start_date from view to model timezone');
+  $t->is($values['datetime'], $model_dt->format('Y-m-d H:i:s'), '->bind() should set datetime from view to model timezone');
 }
 
 /**
@@ -160,7 +164,7 @@ $t->diag('->fetch()');
 $doctrine = Doctrine_Manager::getInstance()->getCurrentConnection()->getDbh();
 $res = $doctrine->query('SELECT * FROM `event_occurrence` WHERE id = 1 LIMIT 1')->fetch();
 
-$t->is($res['start_date'], $EventOccurrence->getStartDate('Y-m-d H:i:s'), '->fetch() should return unified model time when doing a raw SQL query');
+$t->is($res['datetime'], $EventOccurrence->getDatetime('Y-m-d H:i:s'), '->fetch() should return unified model time when doing a raw SQL query');
 
 /**
  * test
@@ -168,7 +172,7 @@ $t->is($res['start_date'], $EventOccurrence->getStartDate('Y-m-d H:i:s'), '->fet
 $t->diag('->fetchOne()');
 $q = Doctrine_Query::create()
   ->from('EventOccurrence e')
-  ->where('e.start_date = ?', $now);
+  ->where('e.datetime = ?', $now);
 $event = $q->fetchOne();
 $t->is($event ? $event->getId() : $event, $EventOccurrence->getId(), '->fetchOne() query should not affect date');
 
@@ -176,8 +180,8 @@ $t->is($event ? $event->getId() : $event, $EventOccurrence->getId(), '->fetchOne
  * test
  */
 $t->diag('->getDateTimeObject()');
-$t->is($EventOccurrence->getDateTimeObject('start_date')->format('Y-m-d H:i:s'), $now, '->getDateTimeObject() should return correct model datetime');
-$model_td = new DateTime($EventOccurrence->getStartDate());
-$t->is($EventOccurrence->getDateTimeObject('start_date', true)->format('Y-m-d H:i:s'), $model_td->setTimezone(new DateTimeZone($sf_user->getGuardUser()->getTimezone()->getName()))->format('Y-m-d H:i:s'), '->getDateTimeObject() should return correct view datetime');
-$model_td = new DateTime($EventOccurrence->getStartDate());
-$t->is($EventOccurrence->getDateTimeObject('start_date', new DateTimeZone('Europe/Moscow'))->format('Y-m-d H:i:s'), $model_td->setTimezone(new DateTimeZone('Europe/Moscow'))->format('Y-m-d H:i:s'), '->getDateTimeObject() should return correct datetime for specific timezone');
+$t->is($EventOccurrence->getDateTimeObject('datetime')->format('Y-m-d H:i:s'), $now, '->getDateTimeObject() should return correct model datetime');
+$model_td = new DateTime($EventOccurrence->getDatetime());
+$t->is($EventOccurrence->getDateTimeObject('datetime', true)->format('Y-m-d H:i:s'), $model_td->setTimezone(new DateTimeZone($sf_user->getGuardUser()->getTimezone()->getName()))->format('Y-m-d H:i:s'), '->getDateTimeObject() should return correct view datetime');
+$model_td = new DateTime($EventOccurrence->getDatetime());
+$t->is($EventOccurrence->getDateTimeObject('datetime', new DateTimeZone('Europe/Moscow'))->format('Y-m-d H:i:s'), $model_td->setTimezone(new DateTimeZone('Europe/Moscow'))->format('Y-m-d H:i:s'), '->getDateTimeObject() should return correct datetime for specific timezone');

@@ -17,7 +17,7 @@ class JagmortTzWidgetFormTime extends sfWidgetFormTime
   public function __construct($options = array(), $attributes = array())
   {
     $this->addOption('timezone', sfContext::getInstance()->getUser()->getGuardUser()->getTimezone()->getName());
-  
+
     parent::__construct($options, $attributes);
   }
 
