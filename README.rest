@@ -1,6 +1,13 @@
 JagmortTimezonePlugin
 =====================
 
+Provide timezonable Doctrine records for Symfony 1.4 
+
+.. contents::
+
+Requirements
+------------
+
 - PHP 5 >= 5.2.0
 - Symfony 1.4
 - Doctrine
@@ -10,14 +17,15 @@ Model and view timezones
 ------------------------
 
 Model time is a unified time (by default your server's system time), view is a
-user time, may specific for any user.
+user time, might be specific for any user.
 
 Installation
 ------------
 
 Activate the plugin in the `config/ProjectConfiguration.class.php`
 
-    [php]
+.. code:: php
+
     class ProjectConfiguration extends sfProjectConfiguration
     {
       public function setup()
@@ -33,11 +41,14 @@ Activate the plugin in the `config/ProjectConfiguration.class.php`
 
 Setup timezone in `config/app.yml`:
 
+.. code:: yml
+
     default_timezone: UTC
 
 Setup timezone in `config/ProjectConfiguration.class.php`:
 
-    [php]
+.. code:: php
+
     class ProjectConfiguration extends sfProjectConfiguration
     {
       ...
@@ -68,11 +79,17 @@ Setup timezone in `config/ProjectConfiguration.class.php`:
 
 Rebuild your models:
 
+.. code:: bash
+
     symfony doctrine:build-model
     symfony doctrine:build-forms
 
 Testing
 -------
+
+Run from the console:
+
+.. code:: bash
 
     cd /path/to/your/project/plugins/JagmortTimezonePlugin
     touch symfony
@@ -80,12 +97,16 @@ Testing
 
 or add to your `config/ProjectConfiguration.class.php`:
 
+.. code:: php
+
   public function setupPlugins()
   {
     $this->pluginConfigurations['JagmortTimezonePlugin']->connectTests();
   }
 
 and then run:
+
+.. code:: bash
 
     cd /path/to/your/project
     symfony test:unit -t JagmortTimezonePlugin
